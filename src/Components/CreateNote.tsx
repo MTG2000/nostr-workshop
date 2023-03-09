@@ -1,13 +1,57 @@
 import { useState } from "react";
+import { EventTemplate, Event, getEventHash, SimplePool } from "nostr-tools";
+import { RELAYS } from "../App";
 
-interface Props {}
+interface Props {
+  pool: SimplePool;
+  hashtags: string[];
+}
 
-export default function CreateNote({}: Props) {
+export default function CreateNote({ pool, hashtags }: Props) {
   const [input, setInput] = useState("");
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(input);
+
+    if (!window.nostr) {
+      alert("Nostr extension not found");
+      return;
+    }
+    // Construct the event object
+    const _baseEvent = {
+      content: input,
+      created_at: Math.round(Date.now() / 1000),
+      kind: 1,
+      tags: [...hashtags.map((hashtag) => ["t", hashtag])],
+    } as EventTemplate;
+
+    // Sign this event (allow the user to sign it with their private key)
+    // // check if the user has a nostr extension
+    try {
+      const pubkey = await window.nostr.getPublicKey();
+
+      const sig = await (await window.nostr.signEvent(_baseEvent)).sig;
+
+      const event: Event = {
+        ..._baseEvent,
+        sig,
+        pubkey,
+        id: getEventHash({ ..._baseEvent, pubkey }),
+      };
+
+      const pubs = pool.publish(RELAYS, event);
+
+      let clearedInput = false;
+
+      pubs.on("ok", () => {
+        if (clearedInput) return;
+
+        clearedInput = true;
+        setInput("");
+      });
+    } catch (error) {
+      alert("User rejected operation");
+    }
   };
 
   return (
