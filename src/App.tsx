@@ -1,10 +1,10 @@
-import { useState } from "react";
 import "./App.css";
+import Feed from "./Components/Feed";
 
 function App() {
   return (
     <div className="app">
-      <h1 className="text-h1 text-red-500">HI</h1>
+      <Feed />
     </div>
   );
 }
