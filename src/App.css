@@ -1,6 +1,11 @@
 #root {
   width: 100%;
-  max-width: 70ch;
   margin: 0 auto;
-  padding: 2rem;
+}
+
+.page {
+  width: 100%;
+  margin: 0 auto;
+  max-width: 80ch;
+  padding: 32px 16px;
 }
