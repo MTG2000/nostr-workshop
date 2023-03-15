@@ -1,10 +1,11 @@
 import { SimplePool, Event } from "nostr-tools";
-import { Filter } from "nostr-tools/lib/filter";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
+import { useStatePersist } from 'use-state-persist';
 import "./App.css";
 import CreateNote from "./Components/CreateNote";
 import HashtagsFilter from "./Components/HashtagsFilter";
+import NostrConnect from "./Components/NostrConnect";
 import NotesList from "./Components/NotesList";
 import { insertEventIntoDescendingList } from "./utils/helperFunctions";
 
@@ -34,6 +35,8 @@ function App() {
   const metadataFetched = useRef<Record<string, boolean>>({});
 
   const [hashtags, setHashtags] = useState<string[]>([]);
+
+  const [remotePubkey, setRemotePubkey] = useStatePersist<string | null>('@remote_pubkey', null);
 
   // setup a relays pool
 
@@ -99,18 +102,37 @@ function App() {
       sub.unsub();
     });
 
-    return () => {};
+    return () => { };
   }, [events, pool]);
+
+
+  const onConnect = (pubkey: string) => {
+    setRemotePubkey(pubkey);
+  };
+
+  const onDisconnect = () => {
+    setRemotePubkey(null);
+  };
+
 
   if (!pool) return null;
 
+  
   return (
     <div className="app">
       <div className="flex flex-col gap-16">
-        <h1 className="text-h1">Nostr Feed</h1>
-        <CreateNote pool={pool} hashtags={hashtags} />
-        <HashtagsFilter hashtags={hashtags} onChange={setHashtags} />
-        <NotesList metadata={metadata} notes={events} />
+        {
+          remotePubkey && remotePubkey.length > 0 ? (
+            <>
+              <h1 className="text-h1">Nostr Feed</h1>
+              <CreateNote pool={pool} hashtags={hashtags} />
+              <HashtagsFilter hashtags={hashtags} onChange={setHashtags} />
+              <NotesList metadata={metadata} notes={events} />
+            </>
+          ) : (
+            <NostrConnect onConnect={onConnect} onDisconnect={onDisconnect} />
+          )
+        }
       </div>
     </div>
   );
