@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { EventTemplate, Event, getEventHash, SimplePool } from "nostr-tools";
-import { RELAYS } from "../App";
+import { Relays } from "../utils/nostr/relays";
 
 interface Props {
   pool: SimplePool;
@@ -39,7 +39,7 @@ export default function CreateNote({ pool, hashtags }: Props) {
         id: getEventHash({ ..._baseEvent, pubkey }),
       };
 
-      const pubs = pool.publish(RELAYS, event);
+      const pubs = pool.publish(Relays.getRelays(), event);
 
       let clearedInput = false;
 

@@ -1,12 +1,10 @@
-import React from "react";
 import { utils as secpUtils } from "@noble/secp256k1";
 import { generatePrivateKey, getPublicKey, nip19 } from "nostr-tools";
+import { useNostrConnection } from "../utils/nostr/use-nostr-connection";
 
-interface Props {
-  onConnected: (connection: NostrAccountConnection) => void;
-}
+export default function ConnectAccount() {
+  const { setConnection } = useNostrConnection();
 
-export default function ConnectAccount({ onConnected }: Props) {
   const clickConnect = async (
     type: "nostr-ext" | "generated-keys" | "inputted-keys"
   ) => {
@@ -24,7 +22,7 @@ export default function ConnectAccount({ onConnected }: Props) {
         "nostr-connection",
         JSON.stringify(connectionObject)
       );
-      onConnected(connectionObject);
+      setConnection(connectionObject);
     } catch (error) {
       console.log(error);
       alert("Something wrong happened");
