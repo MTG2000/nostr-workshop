@@ -111,8 +111,8 @@ function App() {
 
 
   const connect = new Connect({
-    secretKey: nip46SecretKey,
     relay: nip46Relay,
+    secretKey: nip46SecretKey,
   });
   const [connectInstance] = useState(connect);
 
@@ -147,7 +147,7 @@ function App() {
             <>
               <h1 className="text-h1">Nostr Feed</h1>
               <p>{nip19.npubEncode(remotePubkey)}</p>
-              <CreateNote pool={pool} hashtags={hashtags} connect={connect} />
+              <CreateNote pool={pool} hashtags={hashtags} />
               <HashtagsFilter hashtags={hashtags} onChange={setHashtags} />
               <NotesList metadata={metadata} notes={events} />
             </>
