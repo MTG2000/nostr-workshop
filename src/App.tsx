@@ -1,12 +1,17 @@
-import { SimplePool, Event } from "nostr-tools";
-import { Filter } from "nostr-tools/lib/filter";
+import { Connect } from "@nostr-connect/connect";
+import { SimplePool, Event, nip19, getPublicKey } from "nostr-tools";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
+import { useStatePersist } from 'use-state-persist';
 import "./App.css";
 import CreateNote from "./Components/CreateNote";
 import HashtagsFilter from "./Components/HashtagsFilter";
+import NostrConnect from "./Components/NostrConnect";
 import NotesList from "./Components/NotesList";
 import { insertEventIntoDescendingList } from "./utils/helperFunctions";
+
+const nip46SecretKey = "ce04fe3398ff6cc9c81d3ec6f90555b65a0b492237ecf1895e16884c01a30d7b";
+const nip46Relay = "wss://nostr.vulpem.com";
 
 export const RELAYS = [
   "wss://nostr-pub.wellorder.net",
@@ -34,6 +39,8 @@ function App() {
   const metadataFetched = useRef<Record<string, boolean>>({});
 
   const [hashtags, setHashtags] = useState<string[]>([]);
+
+  const [remotePubkey, setRemotePubkey] = useStatePersist<string | null>('@remote_pubkey', null);
 
   // setup a relays pool
 
@@ -99,18 +106,60 @@ function App() {
       sub.unsub();
     });
 
-    return () => {};
+    return () => { };
   }, [events, pool]);
 
+  useEffect(() => {
+    (async () => {
+      const connect = new Connect({
+        relay: nip46Relay,
+        secretKey: nip46SecretKey,
+      });
+      connect.events.on('connect', onConnect);
+      connect.events.on('disconnect', onDisconnect);
+      await connect.init();
+    })();
+  }, []);
+
+
+  const onConnect = (pubkey: string) => {
+    setRemotePubkey(pubkey);
+  };
+
+  const onDisconnect = () => {
+    setRemotePubkey(null);
+  };
+
+  const connectParams = {
+    target: remotePubkey,
+    relay: nip46Relay,
+    secretKey: nip46SecretKey,
+  }
+
   if (!pool) return null;
+
 
   return (
     <div className="app">
       <div className="flex flex-col gap-16">
-        <h1 className="text-h1">Nostr Feed</h1>
-        <CreateNote pool={pool} hashtags={hashtags} />
-        <HashtagsFilter hashtags={hashtags} onChange={setHashtags} />
-        <NotesList metadata={metadata} notes={events} />
+        {
+          remotePubkey !== null && remotePubkey.length > 0 ? (
+            <>
+              <h1 className="text-h1">Nostr Feed</h1>
+              <p>{nip19.npubEncode(remotePubkey)}</p>
+              <CreateNote pool={pool} hashtags={hashtags} connectParams={connectParams} />
+              <HashtagsFilter hashtags={hashtags} onChange={setHashtags} />
+              <NotesList metadata={metadata} notes={events} />
+            </>
+          ) : (
+            <NostrConnect
+              publicKey={getPublicKey(nip46SecretKey)}
+              relay={nip46Relay}
+              onConnect={onConnect}
+              onDisconnect={onDisconnect}
+            />
+          )
+        }
       </div>
     </div>
   );
