@@ -1,4 +1,5 @@
-import { SimplePool, Event } from "nostr-tools";
+import { Connect } from "@nostr-connect/connect";
+import { SimplePool, Event, nip19, getPublicKey } from "nostr-tools";
 import { useEffect, useRef, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { useStatePersist } from 'use-state-persist';
@@ -8,6 +9,9 @@ import HashtagsFilter from "./Components/HashtagsFilter";
 import NostrConnect from "./Components/NostrConnect";
 import NotesList from "./Components/NotesList";
 import { insertEventIntoDescendingList } from "./utils/helperFunctions";
+
+const nip46SecretKey = "ce04fe3398ff6cc9c81d3ec6f90555b65a0b492237ecf1895e16884c01a30d7b";
+const nip46Relay = "wss://nip46.vulpem.com";
 
 export const RELAYS = [
   "wss://nostr-pub.wellorder.net",
@@ -106,6 +110,23 @@ function App() {
   }, [events, pool]);
 
 
+  const connect = new Connect({
+    secretKey: nip46SecretKey,
+    relay: nip46Relay,
+  });
+  const [connectInstance] = useState(connect);
+
+
+
+  useEffect(() => {
+    (async () => {
+      connect.events.on('connect', onConnect);
+      connect.events.on('disconnect', onDisconnect);
+      await connect.init();
+    })();
+  }, []);
+
+
   const onConnect = (pubkey: string) => {
     setRemotePubkey(pubkey);
   };
@@ -117,20 +138,25 @@ function App() {
 
   if (!pool) return null;
 
-  
+
   return (
     <div className="app">
       <div className="flex flex-col gap-16">
         {
-          remotePubkey && remotePubkey.length > 0 ? (
+          remotePubkey !== null && remotePubkey.length > 0 ? (
             <>
               <h1 className="text-h1">Nostr Feed</h1>
-              <CreateNote pool={pool} hashtags={hashtags} />
+              <p>{nip19.npubEncode(remotePubkey)}</p>
+              <CreateNote pool={pool} hashtags={hashtags} connect={connect} />
               <HashtagsFilter hashtags={hashtags} onChange={setHashtags} />
               <NotesList metadata={metadata} notes={events} />
             </>
           ) : (
-            <NostrConnect onConnect={onConnect} onDisconnect={onDisconnect} />
+            <NostrConnect
+              publicKey={getPublicKey(nip46SecretKey)}
+              onConnect={onConnect}
+              onDisconnect={onDisconnect}
+            />
           )
         }
       </div>
