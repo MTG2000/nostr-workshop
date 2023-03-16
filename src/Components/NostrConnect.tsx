@@ -1,16 +1,15 @@
-import { Connect, ConnectURI } from "@nostr-connect/connect";
-import { getPublicKey, nip19 } from "nostr-tools";
-import { useEffect } from "react";
+import { ConnectURI } from "@nostr-connect/connect";
 import QRCode from "react-qr-code";
-import { nip46Relay } from "../App";
 
 
 export default function NostrConnect({
   publicKey,
+  relay,
   onConnect,
   onDisconnect,
 }: {
   publicKey: string;
+  relay: string;
   onConnect: (walletPubkey: string) => void;
   onDisconnect: () => void;
 }) {
@@ -18,7 +17,7 @@ export default function NostrConnect({
   
   const connectURI = new ConnectURI({
     target: publicKey,
-    relay: nip46Relay,
+    relay,
     metadata: {
       name: 'Nostr Workshop',
       description: 'My wonderful workshop',

@@ -1,20 +1,26 @@
 import { useState } from "react";
 import { EventTemplate, Event, getEventHash, SimplePool } from "nostr-tools";
 import { RELAYS } from "../App";
+import { Connect } from "@nostr-connect/connect";
 
 interface Props {
   pool: SimplePool;
   hashtags: string[];
+  connectParams: {
+    target: string | null;
+    relay: string;
+    secretKey: string;
+  }
 }
 
-export default function CreateNote({ pool, hashtags }: Props) {
+export default function CreateNote({ pool, hashtags, connectParams }: Props) {
   const [input, setInput] = useState("");
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!window.nostr) {
-      alert("Nostr extension not found");
+    if (!connectParams.target) {
+      alert("You are not connected to any Nostr Connect signer");
       return;
     }
     // Construct the event object
@@ -28,16 +34,14 @@ export default function CreateNote({ pool, hashtags }: Props) {
     // Sign this event (allow the user to sign it with their private key)
     // // check if the user has a nostr extension
     try {
-      const pubkey = await window.nostr.getPublicKey();
+      const connect = new Connect({
+        relay: connectParams.relay,
+        secretKey: connectParams.secretKey,
+        target: connectParams.target,
+      });
+      const pubkey = connectParams.target;
+      const event: Event = await connect.signEvent({..._baseEvent, pubkey});
 
-      const sig = await (await window.nostr.signEvent(_baseEvent)).sig;
-
-      const event: Event = {
-        ..._baseEvent,
-        sig,
-        pubkey,
-        id: getEventHash({ ..._baseEvent, pubkey }),
-      };
 
       const pubs = pool.publish(RELAYS, event);
 
@@ -48,6 +52,8 @@ export default function CreateNote({ pool, hashtags }: Props) {
 
         clearedInput = true;
         setInput("");
+
+        console.log("Published event", event.id);
       });
     } catch (error) {
       alert("User rejected operation");
