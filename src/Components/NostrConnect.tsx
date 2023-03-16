@@ -2,6 +2,7 @@ import { Connect, ConnectURI } from "@nostr-connect/connect";
 import { getPublicKey, nip19 } from "nostr-tools";
 import { useEffect } from "react";
 import QRCode from "react-qr-code";
+import { nip46Relay } from "../App";
 
 
 export default function NostrConnect({
@@ -17,7 +18,7 @@ export default function NostrConnect({
   
   const connectURI = new ConnectURI({
     target: publicKey,
-    relay: 'wss://nip46.vulpem.com',
+    relay: nip46Relay,
     metadata: {
       name: 'Nostr Workshop',
       description: 'My wonderful workshop',
