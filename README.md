@@ -35,7 +35,8 @@ Initialize the Connect instance on load and add the event listeners:
 
 ```jsx
   const nip46SecretKey = "ce04fe3398ff6cc9c81d3ec6f90555b65a0b492237ecf1895e16884c01a30d7b";
-  const nip46Relay = "wss://nip46-demo.vulpem.com";
+  const nip46Relay = "wss://nostr.vulpem.com";
+
   
   useEffect(() => {
     (async () => {

@@ -11,7 +11,7 @@ import NotesList from "./Components/NotesList";
 import { insertEventIntoDescendingList } from "./utils/helperFunctions";
 
 const nip46SecretKey = "ce04fe3398ff6cc9c81d3ec6f90555b65a0b492237ecf1895e16884c01a30d7b";
-const nip46Relay = "wss://nip46.vulpem.com";
+const nip46Relay = "wss://nostr.vulpem.com";
 
 export const RELAYS = [
   "wss://nostr-pub.wellorder.net",
