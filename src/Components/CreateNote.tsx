@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { EventTemplate, Event, getEventHash, SimplePool } from "nostr-tools";
+import { Event, getEventHash, SimplePool, UnsignedEvent } from "nostr-tools";
 import { Relays } from "../utils/nostr/relays";
+import { useNostrConnection } from "../utils/nostr/use-nostr-connection";
 
 interface Props {
   pool: SimplePool;
@@ -10,33 +11,30 @@ interface Props {
 export default function CreateNote({ pool, hashtags }: Props) {
   const [input, setInput] = useState("");
 
+  const { connection: nostrConnection, signEvent } = useNostrConnection();
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!window.nostr) {
-      alert("Nostr extension not found");
-      return;
-    }
+    if (!nostrConnection) throw new Error("Nostr Connection not found");
+
     // Construct the event object
     const _baseEvent = {
       content: input,
       created_at: Math.round(Date.now() / 1000),
       kind: 1,
       tags: [...hashtags.map((hashtag) => ["t", hashtag])],
-    } as EventTemplate;
+      pubkey: nostrConnection.pubkey,
+    } as UnsignedEvent;
 
     // Sign this event (allow the user to sign it with their private key)
     // // check if the user has a nostr extension
     try {
-      const pubkey = await window.nostr.getPublicKey();
-
-      const sig = await (await window.nostr.signEvent(_baseEvent)).sig;
-
+      const sig = await signEvent(_baseEvent);
       const event: Event = {
         ..._baseEvent,
         sig,
-        pubkey,
-        id: getEventHash({ ..._baseEvent, pubkey }),
+        id: getEventHash({ ..._baseEvent }),
       };
 
       const pubs = pool.publish(Relays.getRelays(), event);

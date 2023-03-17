@@ -1,10 +1,17 @@
-import { signEvent as nostrSignEvent, UnsignedEvent, nip04 } from "nostr-tools";
+import { Connect } from "@nostr-connect/connect";
+import {
+  signEvent as nostrSignEvent,
+  UnsignedEvent,
+  nip04,
+  getPublicKey,
+} from "nostr-tools";
 import {
   createContext,
   PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
+  useRef,
 } from "react";
 import { useStatePersist } from "use-state-persist";
 import { DecryptionQueue } from "./decryptionQueue";
@@ -23,6 +30,12 @@ export type NostrAccountConnection =
       type: "inputted-keys";
       pubkey: string;
       prvkey: string;
+    }
+  | {
+      type: "nostr-connect";
+      pubkey: string;
+      secretKey: string;
+      relay: string;
     };
 
 interface State {
@@ -39,6 +52,29 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
   const [connection, setConnection] =
     useStatePersist<NostrAccountConnection | null>("nostr-connection", null);
 
+  const nostrConnectRef = useRef<Connect | null>(null);
+
+  useEffect(() => {
+    if (connection?.type === "nostr-connect") {
+      (async () => {
+        if (nostrConnectRef.current !== null) return;
+
+        const connect = new Connect({
+          relay: connection.relay,
+          secretKey: connection.secretKey,
+          target: connection.pubkey,
+        });
+
+        nostrConnectRef.current = connect;
+
+        connect.on("disconnect", (data) => {
+          setConnection(null);
+        });
+        // await connect.init();
+      })();
+    }
+  }, [connection, setConnection]);
+
   const signEvent = useCallback(
     async (event: UnsignedEvent) => {
       if (!connection) throw new Error("Nostr Connection not found");
@@ -50,6 +86,14 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
         connection.type === "inputted-keys"
       ) {
         return nostrSignEvent(event, connection.prvkey);
+      } else if (connection.type === "nostr-connect") {
+        console.log("signing event");
+        console.log(nostrConnectRef.current);
+
+        return await nostrConnectRef.current?.nip04.encrypt(
+          event.pubkey,
+          event.content
+        )!;
       }
 
       throw new Error("Invalid Nostr Connection Type");
@@ -71,6 +115,8 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
         connection.type === "inputted-keys"
       ) {
         return nip04.encrypt(connection.prvkey, theirPublicKey, msg);
+      } else if (connection.type === "nostr-connect") {
+        return nostrConnectRef.current!.nip04.encrypt(theirPublicKey, msg);
       }
 
       throw new Error("Invalid Nostr Connection Type");
@@ -92,6 +138,8 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
         connection.type === "inputted-keys"
       ) {
         return nip04.decrypt(connection.prvkey, theirPublicKey, msg);
+      } else if (connection.type === "nostr-connect") {
+        return nostrConnectRef.current!.nip04.decrypt(theirPublicKey, msg);
       }
 
       throw new Error("Invalid Nostr Connection Type");

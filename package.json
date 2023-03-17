@@ -9,12 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@nostr-connect/connect": "^0.4.0",
     "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
     "nostr-tools": "^1.7.4",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
+    "react-qr-code": "^2.0.11",
     "react-router-dom": "^6.9.0",
     "use-debounce": "^9.0.3",
     "use-state-persist": "^0.3.1"

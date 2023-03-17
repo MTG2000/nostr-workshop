@@ -1,9 +1,16 @@
 import { utils as secpUtils } from "@noble/secp256k1";
 import { generatePrivateKey, getPublicKey, nip19 } from "nostr-tools";
-import { useNostrConnection } from "../utils/nostr/use-nostr-connection";
+import { useCallback, useState } from "react";
+import {
+  NostrAccountConnection,
+  useNostrConnection,
+} from "../utils/nostr/use-nostr-connection";
+import ConnectWithNostrConnect from "./ConnectWithNostrConnect";
 
 export default function ConnectAccount() {
   const { setConnection } = useNostrConnection();
+
+  const [inNostrConnectTab, setInNostrConnectTab] = useState(false);
 
   const clickConnect = async (
     type: "nostr-ext" | "generated-keys" | "inputted-keys"
@@ -29,52 +36,73 @@ export default function ConnectAccount() {
     }
   };
 
+  const onNostrConnectConnected = useCallback(
+    (walletPubkey: string, relay: string, secretKey: string) => {
+      setConnection({
+        type: "nostr-connect",
+        pubkey: walletPubkey,
+        relay,
+        secretKey,
+      });
+    },
+    [setConnection]
+  );
+
+  const onDisconnect = useCallback(() => {
+    setConnection(null);
+  }, [setConnection]);
+
   return (
     <div className="bg-gray-700 p-24 rounded">
-      <h1 className="text-h1">Connect Your Nostr Account</h1>
-      <p>Choose a method from below: </p>
+      {inNostrConnectTab ? (
+        <>
+          <button onClick={() => setInNostrConnectTab(false)} className="mb-24">
+            ⬅️ Back
+          </button>
+          <ConnectWithNostrConnect
+            onConnect={onNostrConnectConnected}
+            onDisconnect={onDisconnect}
+          />
+        </>
+      ) : (
+        <>
+          <h1 className="text-h1">Connect Your Nostr Account</h1>
+          <p>Choose a method from below: </p>
 
-      <div className="flex flex-col gap-24 mt-24">
-        <button
-          onClick={() => clickConnect("nostr-ext")}
-          className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
-        >
-          Use Extension
-        </button>
+          <div className="flex flex-col gap-24 mt-24">
+            <button
+              onClick={() => clickConnect("nostr-ext")}
+              className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
+            >
+              Use Extension
+            </button>
 
-        <button
-          onClick={() => clickConnect("generated-keys")}
-          className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
-        >
-          Generate New Key
-        </button>
+            <button
+              onClick={() => clickConnect("generated-keys")}
+              className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
+            >
+              Generate New Key
+            </button>
 
-        <button
-          onClick={() => clickConnect("inputted-keys")}
-          className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
-        >
-          Input Your Private Key
-        </button>
-      </div>
+            <button
+              onClick={() => clickConnect("inputted-keys")}
+              className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
+            >
+              Input Your Private Key
+            </button>
+
+            <button
+              onClick={() => setInNostrConnectTab(true)}
+              className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
+            >
+              Use Nostr-Connect
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-export type NostrAccountConnection =
-  | {
-      type: "nostr-ext";
-      pubkey: string;
-    }
-  | {
-      type: "generated-keys";
-      prvkey: string;
-      pubkey: string;
-    }
-  | {
-      type: "inputted-keys";
-      pubkey: string;
-      prvkey: string;
-    };
 
 async function connectToNostrExtension() {
   if (window.nostr) {
