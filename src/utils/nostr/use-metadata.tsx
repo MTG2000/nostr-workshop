@@ -4,9 +4,13 @@ import { Metadata } from "../../types/nostr";
 import { Relays } from "./relays";
 import { useRelayPool } from "./use-relays-pool";
 
-interface Props {
-  pubkeys: string[];
-}
+type Props =
+  | {
+      pubkeys: string[];
+    }
+  | {
+      pubkey: string;
+    };
 
 export const useMetadata = (props: Props) => {
   const { relayPool: pool } = useRelayPool();
@@ -15,10 +19,13 @@ export const useMetadata = (props: Props) => {
 
   const metadataFetched = useRef<Record<string, boolean>>({});
 
+  const propPubkey = "pubkey" in props ? props.pubkey : undefined;
+  const propsPubkeys = "pubkeys" in props ? props.pubkeys : undefined;
+
   useEffect(() => {
     if (!pool) return;
 
-    const pubkeysToFetch = props.pubkeys.filter(
+    const pubkeysToFetch = (propsPubkeys ? propsPubkeys : [propPubkey!]).filter(
       (key) => metadataFetched.current[key] !== true
     );
 
@@ -47,7 +54,7 @@ export const useMetadata = (props: Props) => {
     });
 
     return () => {};
-  }, [pool, props.pubkeys]);
+  }, [pool, propsPubkeys, propPubkey]);
 
   return { metadata };
 };

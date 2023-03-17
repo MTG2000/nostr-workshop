@@ -16,7 +16,7 @@ function App() {
 
   return (
     <div className="app">
-      <Navbar pubkey={nostrConnection.pubkey} />
+      <Navbar />
       <Outlet />
     </div>
   );

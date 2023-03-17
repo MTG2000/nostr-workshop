@@ -127,14 +127,18 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
   return (
     <>
       <div className="grow flex flex-col">
-        <p className="text-body3 bg-gray-900 p-24 overflow-hidden text-ellipsis font-bold flex items-center">
-          <img
-            src={getProfileDataFromMetaData(metadata, currentOpenContact).image}
-            className="rounded-full w-42 h-42 mr-16 bg-gray-300 border border-gray-400"
-            alt=""
-          />{" "}
-          {getProfileDataFromMetaData(metadata, currentOpenContact).name}
-        </p>
+        {currentOpenContact && (
+          <p className="text-body3 bg-gray-900 p-24 overflow-hidden text-ellipsis font-bold flex items-center">
+            <img
+              src={
+                getProfileDataFromMetaData(metadata, currentOpenContact).image
+              }
+              className="rounded-full w-42 h-42 mr-16 bg-gray-300 border border-gray-400"
+              alt=""
+            />{" "}
+            {getProfileDataFromMetaData(metadata, currentOpenContact).name}
+          </p>
+        )}
         <div className="flex flex-col-reverse grow gap-8 py-16">
           {messages.map((message) => (
             <div
@@ -150,18 +154,20 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
           ))}
         </div>
       </div>
-      <form onSubmit={sendMessage} className="flex w-full gap-16">
-        <input
-          className="grow p-16"
-          type="text"
-          placeholder="Type your message here..."
-          value={msgInput}
-          onChange={(e) => setMsgInput(e.target.value)}
-        />
-        <button className="bg-violet-500 text-body3 px-16 py-4 shrink-0 rounded-8 font-bold hover:bg-violet-600 active:scale-90">
-          Send Message 📧
-        </button>
-      </form>
+      {currentOpenContact && (
+        <form onSubmit={sendMessage} className="flex w-full gap-16">
+          <input
+            className="grow p-16"
+            type="text"
+            placeholder="Type your message here..."
+            value={msgInput}
+            onChange={(e) => setMsgInput(e.target.value)}
+          />
+          <button className="bg-violet-500 text-body3 px-16 py-4 shrink-0 rounded-8 font-bold hover:bg-violet-600 active:scale-90">
+            Send Message 📧
+          </button>
+        </form>
+      )}
     </>
   );
 }
