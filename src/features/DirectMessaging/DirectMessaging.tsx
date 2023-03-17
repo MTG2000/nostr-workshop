@@ -10,8 +10,6 @@ export default function DirectMessaging() {
 
   if (nostrConnection === null) throw new Error("Nostr connection not found");
 
-  console.log(currentOpenContact);
-
   return (
     <div className="max-w-[130ch] mx-auto px-16">
       <h1 className="text-h1 font-bolder text-violet-509">Direct Messaging</h1>

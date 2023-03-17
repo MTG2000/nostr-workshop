@@ -1,4 +1,3 @@
-import { nip19 } from "nostr-tools";
 import { Link } from "react-router-dom";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { useMetadata } from "../utils/nostr/use-metadata";

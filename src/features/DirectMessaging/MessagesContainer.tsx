@@ -1,5 +1,6 @@
-import { Event, EventTemplate, getEventHash } from "nostr-tools";
+import { Event, getEventHash, UnsignedEvent } from "nostr-tools";
 import React, { useEffect, useMemo, useState } from "react";
+import CopyToClipboard from "react-copy-to-clipboard";
 import {
   getProfileDataFromMetaData,
   insertEventIntoDescendingList,
@@ -21,7 +22,11 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
 
   const [messages, setMessages] = useState<Event[]>([]);
 
-  const { connection: nostrConnection } = useNostrConnection();
+  const {
+    connection: nostrConnection,
+    encryptMessage,
+    signEvent,
+  } = useNostrConnection();
 
   const myPubkey = nostrConnection?.pubkey;
 
@@ -80,33 +85,26 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!window.nostr) {
-      alert("Nostr extension not found");
-      return;
-    }
-    // Construct the event object
-    const encryptedContent = await window.nostr.nip04?.encrypt(
-      currentOpenContact,
-      msgInput
-    );
-
-    const _baseEvent = {
-      content: encryptedContent,
-      created_at: Math.round(Date.now() / 1000),
-      kind: 4,
-      tags: [["p", currentOpenContact]],
-    } as EventTemplate;
-
     try {
-      const pubkey = await window.nostr.getPublicKey();
+      const encryptedContent = await encryptMessage(
+        msgInput,
+        currentOpenContact
+      );
 
-      const sig = await (await window.nostr.signEvent(_baseEvent)).sig;
+      const _baseEvent = {
+        content: encryptedContent,
+        created_at: Math.round(Date.now() / 1000),
+        kind: 4,
+        tags: [["p", currentOpenContact]],
+        pubkey: myPubkey,
+      } as UnsignedEvent;
+
+      const sig = await signEvent(_baseEvent);
 
       const event: Event = {
         ..._baseEvent,
         sig,
-        pubkey,
-        id: getEventHash({ ..._baseEvent, pubkey }),
+        id: getEventHash({ ..._baseEvent }),
       };
 
       const pubs = relayPool!.publish(Relays.getRelays(), event);
@@ -120,6 +118,8 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
         setMsgInput("");
       });
     } catch (error) {
+      console.log(error);
+
       alert("User rejected operation");
     }
   };
@@ -128,7 +128,7 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
     <>
       <div className="grow flex flex-col">
         {currentOpenContact && (
-          <p className="text-body3 bg-gray-900 p-24 overflow-hidden text-ellipsis font-bold flex items-center">
+          <div className=" bg-gray-900 p-24 overflow-hidden text-ellipsis flex items-center">
             <img
               src={
                 getProfileDataFromMetaData(metadata, currentOpenContact).image
@@ -136,8 +136,20 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
               className="rounded-full w-42 h-42 mr-16 bg-gray-300 border border-gray-400"
               alt=""
             />{" "}
-            {getProfileDataFromMetaData(metadata, currentOpenContact).name}
-          </p>
+            <div>
+              <p className="text-body3 font-bold ">
+                {getProfileDataFromMetaData(metadata, currentOpenContact).name}
+              </p>
+              <CopyToClipboard
+                text={currentOpenContact}
+                onCopy={() => alert("Copied public key!")}
+              >
+                <button className="">
+                  {currentOpenContact.slice(0, 15)}...
+                </button>
+              </CopyToClipboard>
+            </div>
+          </div>
         )}
         <div className="flex flex-col-reverse grow gap-8 py-16">
           {messages.map((message) => (
