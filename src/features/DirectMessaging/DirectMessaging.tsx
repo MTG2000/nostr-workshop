@@ -22,7 +22,7 @@ export default function DirectMessaging() {
             onOpenContact={setCurrentOpenContact}
           />
         </div>
-        <div className="col-span-2 h-[min(60vh,800px)] bg-gray-800 bg-opacity-50 p-16 flex flex-col ">
+        <div className="col-span-2 h-[min(60vh,800px)] bg-gray-900 bg-opacity-30 rounded p-16 flex flex-col ">
           <MessagesContainer
             key={currentOpenContact}
             currentOpenContact={currentOpenContact}

@@ -1,6 +1,8 @@
 import { nip19 } from "nostr-tools";
-import React from "react";
+import React, { useMemo } from "react";
 import { useStatePersist } from "use-state-persist";
+import { getProfileDataFromMetaData } from "../../utils/helperFunctions";
+import { useMetadata } from "../../utils/nostr/use-metadata";
 
 interface Props {
   pubkey: string;
@@ -17,6 +19,13 @@ export default function ContactsList({
     `${pubkey}:contacts`,
     []
   );
+
+  const pubkeysToFetch = useMemo(
+    () => contacts.map((contact) => contact.pubkey),
+    [contacts]
+  );
+
+  const { metadata } = useMetadata({ pubkeys: pubkeysToFetch });
 
   const [newContact, setNewContact] = React.useState("");
 
@@ -47,20 +56,38 @@ export default function ContactsList({
       )}
       {contacts.length > 0 && (
         <ul>
-          {contacts.map((contact, i) => (
-            <li key={i} className="overflow-hidden">
-              <button
-                className={`text-ellipsis overflow-hidden w-full p-16 ${
-                  currentOpenContact === contact.pubkey
-                    ? "bg-violet-400 bg-opacity-50"
-                    : "hover:bg-gray-100 hover:bg-opacity-10 active:bg-opacity-20 active:scale-95"
-                }`}
-                onClick={() => onOpenContact?.(contact.pubkey)}
-              >
-                {contact.pubkey}
-              </button>
-            </li>
-          ))}
+          {contacts.map((contact, i) => {
+            const profileData = getProfileDataFromMetaData(
+              metadata,
+              contact.pubkey
+            );
+            return (
+              <li key={i} className="overflow-hidden">
+                <button
+                  className={`text-ellipsis overflow-hidden w-full p-16 flex gap-12 text-left ${
+                    currentOpenContact === contact.pubkey
+                      ? "bg-violet-400 bg-opacity-50"
+                      : "hover:bg-gray-100 hover:bg-opacity-10 active:bg-opacity-20 active:scale-95"
+                  }`}
+                  onClick={() => onOpenContact?.(contact.pubkey)}
+                >
+                  <img
+                    src={profileData.image}
+                    className="shrink-0 bg-gray-200 w-42 aspect-square rounded-full border border-gray-400"
+                    alt=""
+                  />
+                  <div className="overflow-hidden">
+                    <p className="text-body3 font-bold overflow-hidden text-ellipsis">
+                      {profileData.name}
+                    </p>
+                    <p className="text-body5 text-gray-400 overflow-hidden text-ellipsis">
+                      {profileData.pubkey}
+                    </p>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
       <hr />
