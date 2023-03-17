@@ -23,9 +23,6 @@ export default function ConnectWithNostrConnect({
     });
 
     const onConnectHandler = (pubkey: string) => {
-      console.log("On Connect");
-      console.log(pubkey);
-
       onConnect(pubkey, nip46Relay, nip46SecretKey);
     };
 

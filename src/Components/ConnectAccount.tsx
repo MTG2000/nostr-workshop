@@ -87,12 +87,12 @@ export default function ConnectAccount() {
               Input Your Private Key
             </button>
 
-            <button
+            {/* <button
               onClick={() => setInNostrConnectTab(true)}
               className="bg-violet-500 text-body3 px-16 py-4 rounded-8 font-bold hover:bg-violet-600 active:scale-90"
             >
               Use Nostr-Connect
-            </button>
+            </button> */}
           </div>
         </>
       )}

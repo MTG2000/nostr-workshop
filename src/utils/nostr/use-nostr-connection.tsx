@@ -55,6 +55,8 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
   const nostrConnectRef = useRef<Connect | null>(null);
 
   useEffect(() => {
+    if (!connection) nostrConnectRef.current = null;
+
     if (connection?.type === "nostr-connect") {
       (async () => {
         if (nostrConnectRef.current !== null) return;
@@ -65,12 +67,9 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
           target: connection.pubkey,
         });
 
-        nostrConnectRef.current = connect;
+        connect.init();
 
-        connect.on("disconnect", (data) => {
-          setConnection(null);
-        });
-        // await connect.init();
+        nostrConnectRef.current = connect;
       })();
     }
   }, [connection, setConnection]);
@@ -87,9 +86,6 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
       ) {
         return nostrSignEvent(event, connection.prvkey);
       } else if (connection.type === "nostr-connect") {
-        console.log("signing event");
-        console.log(nostrConnectRef.current);
-
         return (await nostrConnectRef.current!.signEvent(event)).sig;
       }
 
