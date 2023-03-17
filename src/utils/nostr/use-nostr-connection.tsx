@@ -90,10 +90,7 @@ export const NostrConnectionProvider = (props: PropsWithChildren<{}>) => {
         console.log("signing event");
         console.log(nostrConnectRef.current);
 
-        return await nostrConnectRef.current?.nip04.encrypt(
-          event.pubkey,
-          event.content
-        )!;
+        return (await nostrConnectRef.current!.signEvent(event)).sig;
       }
 
       throw new Error("Invalid Nostr Connection Type");

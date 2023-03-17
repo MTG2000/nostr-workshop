@@ -25,10 +25,6 @@ export default function ConnectAccount() {
         connectionObject = await connectInputtedKey();
       else throw new Error("Invalid tab");
 
-      sessionStorage.setItem(
-        "nostr-connection",
-        JSON.stringify(connectionObject)
-      );
       setConnection(connectionObject);
     } catch (error) {
       console.log(error);
