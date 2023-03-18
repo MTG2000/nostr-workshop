@@ -157,7 +157,5 @@ function isValidPrivateKey(
     prvKey.startsWith("nsec") &&
     secpUtils.isValidPrivateKey(nip19.decode(prvKey).data as string);
 
-  // if (isValidBech32Key) console.log(getPublicKey(prvKey));
-
   return isValidHexKey || isValidBech32Key;
 }

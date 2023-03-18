@@ -16,7 +16,7 @@ export default function ContactsList({
   onOpenContact,
 }: Props) {
   const [contacts, setContacts] = useStatePersist<Contact[]>(
-    `${pubkey}:contacts`,
+    `contacts:${pubkey}`,
     []
   );
 
@@ -109,10 +109,4 @@ export default function ContactsList({
 
 export interface Contact {
   pubkey: string;
-}
-
-function getContactsFromStorage(pubkey: string) {
-  return JSON.parse(
-    localStorage.getItem(`${pubkey}:contacts`) || "[]"
-  ) as Contact[];
 }

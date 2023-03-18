@@ -42,71 +42,23 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
   useEffect(() => {
     if (!relayPool) return;
 
-    const sub = relayPool.sub(Relays.getRelays(), [
-      {
-        kinds: [4],
-        limit: 100,
-        "#p": [currentOpenContact],
-        authors: [myPubkey],
-      },
-      {
-        kinds: [4],
-        limit: 100,
-        "#p": [myPubkey],
-        authors: [currentOpenContact],
-      },
-    ]);
+    // Create Subscription
 
-    const onEvent = async (event: Event) => {
-      DecryptionQueue.add(event.content, currentOpenContact, (err, msg) => {
-        if (err) {
-          return console.log(err);
-        }
-
-        const decryptedEvent = {
-          ...event,
-          content: msg,
-        } as Event;
-        setMessages((messages) =>
-          insertEventIntoDescendingList(messages, decryptedEvent)
-        );
-      });
-    };
-
-    sub.on("event", onEvent);
-
-    return () => {
-      sub.unsub();
-      sub.off("event", onEvent);
-      DecryptionQueue.clear();
-    };
+    // on event received:
+    // - decrypt event
+    // - add event to sorted list
+    // (use queue)
   }, [currentOpenContact, myPubkey, relayPool]);
 
   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      const encryptedContent = await encryptMessage(
-        msgInput,
-        currentOpenContact
-      );
+      // create event to publish
+      // // encrypt content
+      // // sign event
 
-      const _baseEvent = {
-        content: encryptedContent,
-        created_at: Math.round(Date.now() / 1000),
-        kind: 4,
-        tags: [["p", currentOpenContact]],
-        pubkey: myPubkey,
-      } as UnsignedEvent;
-
-      const sig = await signEvent(_baseEvent);
-
-      const event: Event = {
-        ..._baseEvent,
-        sig,
-        id: getEventHash({ ..._baseEvent }),
-      };
-
+      const event = {} as Event;
       const pubs = relayPool!.publish(Relays.getRelays(), event);
 
       let clearedInput = false;
