@@ -1,11 +1,7 @@
-import { Event, getEventHash, UnsignedEvent } from "nostr-tools";
+import { Event } from "nostr-tools";
 import React, { useEffect, useMemo, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import {
-  getProfileDataFromMetaData,
-  insertEventIntoDescendingList,
-} from "../../utils/helperFunctions";
-import { DecryptionQueue } from "../../utils/nostr/decryptionQueue";
+import { getProfileDataFromMetaData } from "../../utils/helperFunctions";
 import { Relays } from "../../utils/nostr/relays";
 import { useMetadata } from "../../utils/nostr/use-metadata";
 import { useNostrConnection } from "../../utils/nostr/use-nostr-connection";
@@ -22,11 +18,7 @@ export default function MessagesContainer({ currentOpenContact }: Props) {
 
   const [messages, setMessages] = useState<Event[]>([]);
 
-  const {
-    connection: nostrConnection,
-    encryptMessage,
-    signEvent,
-  } = useNostrConnection();
+  const { connection: nostrConnection } = useNostrConnection();
 
   const myPubkey = nostrConnection?.pubkey;
 
