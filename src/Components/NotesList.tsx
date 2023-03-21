@@ -1,5 +1,5 @@
 import { Event, nip19 } from "nostr-tools";
-import { Metadata } from "../App";
+import { Metadata } from "../types/nostr";
 import NoteCard from "./NoteCard";
 
 interface Props {
